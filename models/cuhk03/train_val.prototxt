@@ -1,24 +1,54 @@
-input : "data"
-input_dim : 1
-input_dim : 9
-input_dim : 60
-input_dim : 60
+name : "re_id"
+
+layer {
+  type: 'Python'
+  name: 'data'
+  top: 'data'
+  top: 'label'
+  python_param {
+    module: 'label_shuffling_layer'
+    layer: 'LabelShufflingLayer'
+    param_str:  """ source: path/to/lmdb_train \n batch_size: 128 \n scales : [0.00390625, 1.] \n max_number_object_per_label : 5000 """
+  }
+  include {
+    phase: TRAIN
+  } 
+}
+
 
 
 layer {
-    name: "slice_data"
-    type: "Slice"
-    bottom: "data"
-    top: "data1_1"
-    top: "data1_2"
-    top: "data1_3"
-   
-    slice_param {
-        slice_dim: 1
-        slice_point: 3
-        slice_point: 6
-    }
+  type: 'Python'
+  name: 'data'
+  top: 'data'
+  top: 'label'
+  python_param {
+    module: 'label_shuffling_layer'
+    layer: 'LabelShufflingLayer'
+    param_str:  """ source: path/to/lmdb_validation \n batch_size: 128 \n scales : [0.00390625, 1.] \n max_number_object_per_label : 5000 """
+  }
+  include {
+    phase: TEST
+  }
+
 }
+
+
+layer {
+  name: "slice_data"
+  type: "Slice"
+  bottom: "data"
+  top: "data1_1"
+  top: "data1_2"
+  top: "data1_3"
+
+  slice_param {
+    slice_dim: 1
+    slice_point: 3
+    slice_point: 6
+  }
+}
+
 
 layer {
   name: "conv1_1_1"
@@ -60,13 +90,13 @@ layer {
     num_output: 64
     kernel_size: 7
     stride: 1
-        weight_filler {
-        type: "gaussian"
-        std: 0.01
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
     }
     bias_filler {
-        type: "gaussian"
-        std: 0.01
+      type: "gaussian"
+      std: 0.01
     }
   }
 
@@ -204,7 +234,6 @@ layer {
     name: "conv2_1b"
     decay_mult: 0
   }
-
 }
 
 layer {
@@ -235,19 +264,22 @@ layer {
     name: "conv2_2b"
     decay_mult: 0
   }
-	  
 }
+
+
 layer {
   name: "conv2_1_3"
   type: "Convolution"
   bottom: "pool1_1_3"
   top: "conv2_1_3"
+
   convolution_param {
+
     num_output: 64
     pad : 2
     kernel_size: 5
     stride: 1
-        weight_filler {
+    weight_filler {
       type: "gaussian"
       std: 0.01
     }
@@ -265,6 +297,7 @@ layer {
     name: "conv2_3b"
     decay_mult: 0
   }
+
 }
 
 layer {
@@ -291,6 +324,7 @@ layer {
 }
 
 
+
 layer {
   name: "pool2_1_1"
   type: "Pooling"
@@ -304,15 +338,15 @@ layer {
 }
 
 layer {
-  name: "pool2_1_2"
-  type: "Pooling"
-  bottom: "conv2_1_2"
-  top: "pool2_1_2"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
+    name: "pool2_1_2"
+    type: "Pooling"
+    bottom: "conv2_1_2"
+    top: "pool2_1_2"
+    pooling_param {
+      pool: MAX
+      kernel_size: 2
+      stride: 2     
+    }
 }
 
 layer {
@@ -323,11 +357,10 @@ layer {
   pooling_param {
     pool: MAX
     kernel_size: 2
-    stride: 2
+    stride: 2    
   }
-  
-}
 
+}
 
 
 layer {
@@ -340,7 +373,6 @@ layer {
   concat_param {
     concat_dim: 1
   }
- 
 }
 
 layer {
@@ -379,7 +411,29 @@ layer {
   param {
     name :"ip1_b_reid" 
     decay_mult: 0
-  } 
+  }
 }
 
 
+layer {
+  name: "cosine"
+  type: "CosineSimilarityBatch"
+  bottom: "ip1_reid"
+  bottom: "label"
+  top: "cosine"
+  top: "pair_label"
+}
+
+layer {
+  type: 'Python'
+  name: 'loss'
+  bottom : "cosine" 
+  bottom : "pair_label"
+  top: 'loss'
+  python_param {
+    module: 'distribution_loss_layer'
+    layer: 'DistributionLossLayer'
+    param_str:  """ grid_delta : 0.01 \n loss : simple \n distr_type : hist """
+  }
+  loss_weight: 1
+}

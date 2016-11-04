@@ -115,7 +115,7 @@ class LabelShufflingLayer(caffe.Layer):
 
         for i in xrange(len(self.shapes_)):
             batch_data.append([])
-            
+
         batch_keys = self.getBatch()
         env = lmdb.open(self.source_, readonly=True) 
 
