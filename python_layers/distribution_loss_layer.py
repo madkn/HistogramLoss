@@ -24,7 +24,6 @@ def getPlaces(x, grid):
     inx_sorted = np.argsort(x)
     
     ind = 1
-    
     #find initial bucket :
     for i in xrange(len(grid)):
         if x[inx_sorted[0]]>grid[i]:
@@ -39,14 +38,13 @@ def getPlaces(x, grid):
     for i in xrange(x_start, len(x)): 
         while x[inx_sorted[i]]>grid[ind]:
             ind += 1
-
             if ind >= len(grid): 
                 return places_to_bins, bins_to_places         
         places_to_bins[inx_sorted[i]] = ind
         bins_to_places[ind].append(inx_sorted[i])
     return places_to_bins, bins_to_places           
 
- #estimate the histogram using the assigments of points to grid bins
+#estimate the histogram using the assigments of points to grid bins
 def getDistributionDensity(x, bins_to_places, grid, grid_delta):
     p = np.zeros_like(grid)
     for i in xrange(len(grid)):
@@ -68,11 +66,6 @@ def getDistributionDensity(x, bins_to_places, grid, grid_delta):
     p /= len(x)*grid_delta
     return p
 
-
-
-
-
-
 #def calculateNPGradOverBins(d_pos, distr_pos, d_neg, distr_neg, grid_delta):
 #    dldp = np.cumsum(distr_neg[::-1])[::-1]
 #    dldn = np.cumsum(distr_pos)
@@ -85,7 +78,6 @@ def getDistributionDensity(x, bins_to_places, grid, grid_delta):
 #    grad_neg[1:] = (grad_neg[1:] - grad_neg[:-1])
 #    grad_neg/= grid_delta*len(d_neg)
 #    return grad_pos, grad_neg
-
 
 def calculateLossGradOverDistribution(distr_pos, distr_neg, L):    
     grad_pos = np.dot(L, distr_neg)
@@ -110,20 +102,7 @@ def getGradOverData(data, grad_over_bins, places_to_bins):
    return np.array(grad)
 
 
-#def checkTables(places_to_bins, bins_to_places):
-#    for i in places_to_bins.keys():
-#        if not i in bins_to_places[places_to_bins[i]]:
-#            raise Exception(str(i) + " " + str(places_to_bins[i]) + " " + str(bins_to_places[places_to_bins[i]]))
-#    for b in bins_to_places.keys():
-#        for i in bins_to_places[b]:
-#            if  places_to_bins[i] != b:
-#                raise Exception(str(i) + " " + str(places_to_bins[i]) + " " + str(bins_to_places[places_to_bins[i]]))
-
-
-
 ##################### Beta-distribution fitting and gradient ##########################################################
-
-
 #estimate beta-distribution
 def getBetaDistributionDensity(x, grid, grid_delta):
     grid =np.array(np.copy(grid))
@@ -159,8 +138,6 @@ def dvardx(x):
     expr4 = (x - meanx_)*2./(len(x)-1)
     dvardx = expr3 + expr4
     return dvardx
-
-
 
 def calculateLossGradOverDataForBeta(d_pos, d_neg, grid, grid_delta, grad_pos, grad_neg):
     grid = np.array(np.copy(grid))
@@ -202,8 +179,10 @@ def calculateLossGradOverDataForBeta(d_pos, d_neg, grid, grid_delta, grad_pos, g
     ######## d alpha/beta d mean/var
     
     #checked
-    dalpha_dmean_pos = 1./var_pos*(2*mean_pos - 3*mean_pos**2) - 1 + mean_pos**2*(1-mean_pos)/var_pos**2/(len(d_pos)-1)*(2*np.sum(d_pos_scaled-mean_pos))
-    dalpha_dmean_neg = 1./var_neg*(2*mean_neg - 3*mean_neg**2) - 1 + mean_neg**2*(1-mean_neg)/var_neg**2/(len(d_neg)-1)*(2*np.sum(d_neg_scaled-mean_neg))
+    dalpha_dmean_pos = 1./var_pos*(2*mean_pos - 3*mean_pos**2) - 1 + \
+	mean_pos**2*(1-mean_pos)/var_pos**2/(len(d_pos)-1)*(2*np.sum(d_pos_scaled-mean_pos))
+    dalpha_dmean_neg = 1./var_neg*(2*mean_neg - 3*mean_neg**2) - 1 + \
+        mean_neg**2*(1-mean_neg)/var_neg**2/(len(d_neg)-1)*(2*np.sum(d_neg_scaled-mean_neg))
     
     #checked
     dalpha_dvar_pos = -(mean_pos)**2*(1-mean_pos)*(var_pos)**(-2)
@@ -227,8 +206,10 @@ def calculateLossGradOverDataForBeta(d_pos, d_neg, grid, grid_delta, grad_pos, g
     ### d distr(p/n) d alpha/beta
 
 
-    gammaTerm_pos = np.exp(gammaln(alpha_pos+beta_pos) - gammaln(alpha_pos) - gammaln(beta_pos)) #gamma(alpha_pos+beta_pos)/gamma(alpha_pos)/gamma(beta_pos)
-    gammaTerm_neg = np.exp(gammaln(alpha_neg+beta_neg) - gammaln(alpha_neg) - gammaln(beta_neg))#gamma(alpha_neg+beta_neg)/gamma(alpha_neg)/gamma(beta_neg)
+    gammaTerm_pos = np.exp(gammaln(alpha_pos+beta_pos) - gammaln(alpha_pos) - \
+			   gammaln(beta_pos)) 
+    gammaTerm_neg = np.exp(gammaln(alpha_neg+beta_neg) - gammaln(alpha_neg) - \
+			   gammaln(beta_neg))
 
     if gammaTerm_pos >= np.inf :
         gammaTerm_pos = 1e+200
@@ -237,36 +218,30 @@ def calculateLossGradOverDataForBeta(d_pos, d_neg, grid, grid_delta, grad_pos, g
     
   
     #checked 
-#     dGammaTerm_dalpha_pos = gamma_derivative(alpha_pos + beta_pos) * gamma(alpha_pos) * gamma(beta_pos) - gamma(alpha_pos + beta_pos) * gamma(beta_pos)*gamma_derivative(alpha_pos)
-#     dGammaTerm_dalpha_pos /= gamma(alpha_pos)**2 * gamma(beta_pos)**2
-#     dGammaTerm_dalpha_neg = gamma_derivative(alpha_neg + beta_neg) * gamma(alpha_neg) * gamma(beta_neg) - gamma(alpha_neg + beta_neg) * gamma(beta_neg)*gamma_derivative(alpha_neg)
-#     dGammaTerm_dalpha_neg /= gamma(alpha_neg)**2 * gamma(beta_neg)**2
-    
     dGammaTerm_dalpha_pos = gammaTerm_pos*(polygamma(0,alpha_pos+beta_pos) - polygamma(0,alpha_pos))
     dGammaTerm_dalpha_neg = gammaTerm_neg*(polygamma(0,alpha_neg+beta_neg) - polygamma(0,alpha_neg))
     
     #checked
-    #dGammaTerm_dbeta_pos = gamma_derivative(alpha_pos+beta_pos)*gamma(alpha_pos)*gamma(beta_pos) - gamma(alpha_pos+beta_pos)*gamma(alpha_pos)*gamma_derivative(beta_pos)
-    #dGammaTerm_dbeta_pos /= gamma(alpha_pos)**2 * gamma(beta_pos)**2
-    
-    #dGammaTerm_dbeta_neg = gamma_derivative(alpha_neg+beta_neg)*gamma(alpha_neg)*gamma(beta_neg) - gamma(alpha_neg+beta_neg)*gamma(alpha_neg)*gamma_derivative(beta_neg)
-    #dGammaTerm_dbeta_neg /= gamma(alpha_neg)**2 * gamma(beta_neg)**2
     dGammaTerm_dbeta_pos = gammaTerm_pos*(polygamma(0,alpha_pos+beta_pos) - polygamma(0,beta_pos))
     dGammaTerm_dbeta_neg = gammaTerm_neg*(polygamma(0,alpha_neg+beta_neg) - polygamma(0,beta_neg))
     
+    dpdalpha_pos = (dGammaTerm_dalpha_pos * grid**(alpha_pos - 1)*(1-grid)**(beta_pos-1) + \
+		    gammaTerm_pos * grid**(alpha_pos-1)*np.log(grid)*(1-grid)**(beta_pos-1))*grid_delta/2.
+    dndalpha_neg = (dGammaTerm_dalpha_neg * grid**(alpha_neg - 1)*(1-grid)**(beta_neg-1) + \
+		    gammaTerm_neg * grid**(alpha_neg-1)*np.log(grid)*(1-grid)**(beta_neg-1))*grid_delta/2.
     
+    dpdbeta_pos = (dGammaTerm_dbeta_pos * grid**(alpha_pos-1)*(1-grid)**(beta_pos-1) + \
+		   gammaTerm_pos * grid**(alpha_pos-1)*(1-grid)**(beta_pos-1)*np.log(1-grid))*grid_delta/2.
+    dndbeta_neg = (dGammaTerm_dbeta_neg * grid**(alpha_neg-1)*(1-grid)**(beta_neg-1) + \
+		   gammaTerm_neg * grid**(alpha_neg-1)*(1-grid)**(beta_neg-1)*np.log(1-grid))*grid_delta/2.
     
-    dpdalpha_pos = (dGammaTerm_dalpha_pos * grid**(alpha_pos - 1)*(1-grid)**(beta_pos-1) +  gammaTerm_pos * grid**(alpha_pos-1)*np.log(grid)*(1-grid)**(beta_pos-1))*grid_delta/2.
-    dndalpha_neg = (dGammaTerm_dalpha_neg * grid**(alpha_neg - 1)*(1-grid)**(beta_neg-1) +  gammaTerm_neg * grid**(alpha_neg-1)*np.log(grid)*(1-grid)**(beta_neg-1))*grid_delta/2.
-    
-    dpdbeta_pos = (dGammaTerm_dbeta_pos * grid**(alpha_pos-1)*(1-grid)**(beta_pos-1) + gammaTerm_pos * grid**(alpha_pos-1)*(1-grid)**(beta_pos-1)*np.log(1-grid))*grid_delta/2.
-    dndbeta_neg = (dGammaTerm_dbeta_neg * grid**(alpha_neg-1)*(1-grid)**(beta_neg-1) + gammaTerm_neg * grid**(alpha_neg-1)*(1-grid)**(beta_neg-1)*np.log(1-grid))*grid_delta/2.
-    
-    ############ d distr d x
+    #d distr d x
     # matrix : grid X number of points
     
-    dpdd_pos = np.dot(dpdalpha_pos.T.reshape((len(grid), 1)), dalpha_dd_pos) + np.dot(dpdbeta_pos.T.reshape((len(grid), 1)), dbeta_dd_pos) 
-    dndd_neg = np.dot(dndalpha_neg.T.reshape((len(grid), 1)), dalpha_dd_neg) + np.dot(dndbeta_neg.T.reshape((len(grid), 1)), dbeta_dd_neg) 
+    dpdd_pos = np.dot(dpdalpha_pos.T.reshape((len(grid), 1)), dalpha_dd_pos) + \
+	       np.dot(dpdbeta_pos.T.reshape((len(grid), 1)), dbeta_dd_pos) 
+    dndd_neg = np.dot(dndalpha_neg.T.reshape((len(grid), 1)), dalpha_dd_neg) + \
+               np.dot(dndbeta_neg.T.reshape((len(grid), 1)), dbeta_dd_neg) 
     
     
     ############# FINAL GRADIENT
@@ -277,19 +252,18 @@ def calculateLossGradOverDataForBeta(d_pos, d_neg, grid, grid_delta, grad_pos, g
     return np.array(grad_pos/2.).reshape(len(d_pos)), np.array(grad_neg/2.).reshape(len(d_neg))
 
 #######################################################################################################################
-    
-# calculates probability of quadruplet to be in wrong order : positive pair less similar than negative one (this corresponds to 'simple' loss, other variants ('linear', 'exp') are generalizations that take into account not only the order but also the difference between the two similarity values)
-# can use histogram and beta-distribution to fit input data
-
 LOSS_SIMPLE = 'simple'
 LOSS_LINEAR = 'linear'
 LOSS_EXP = 'exp'
 
 DISTR_TYPE_HIST = 'hist'
 DISTR_TYPE_BETA = 'beta'
+
+# Calculates probability of quadruplet to be in wrong order : positive pair less similar than negative one 
+# (this corresponds to 'simple' loss, other variants ('linear', 'exp') are generalizations that take into account 
+# not only the order but also the difference between the two similarity values)
+# Can use histogram and beta-distribution to fit input data
 class DistributionLossLayer(caffe.Layer):
-
-
     def getL(self):
         L = np.ones((len(self.grid),len(self.grid)))
         if self.loss == LOSS_SIMPLE:
@@ -340,8 +314,6 @@ class DistributionLossLayer(caffe.Layer):
         self.pos_label = 1
 	self.neg_label = -1
     
-
- 
     def reshape(self, bottom, top):
         ## bottom[0] is cosine similarities
         ## bottom[1] is pair labels
@@ -394,15 +366,14 @@ class DistributionLossLayer(caffe.Layer):
         grad_pos_distr , grad_neg_distr = calculateLossGradOverDistribution(self.distr_pos, self.distr_neg, L)  
 
         if self.distr_type == DISTR_TYPE_HIST:  
-            self.grad_pos_bin, self.grad_neg_bin = calculateLossGradOverBinsForHist(self.d_pos, self.d_neg, self.grid_delta, grad_pos_distr, grad_neg_distr)
+            self.grad_pos_bin, self.grad_neg_bin = calculateLossGradOverBinsForHist(self.d_pos, self.d_neg, 
+								            self.grid_delta, grad_pos_distr, grad_neg_distr)
 	    self.grad_pos = getGradOverData(self.d_pos, self.grad_pos_bin, self.places_to_bins_pos)
             self.grad_neg = getGradOverData(self.d_neg, self.grad_neg_bin, self.places_to_bins_neg)
-
-
         elif  self.distr_type == DISTR_TYPE_BETA:  
-            self.grad_pos, self.grad_neg = calculateLossGradOverDataForBeta(self.d_pos, self.d_neg, self.grid, self.grid_delta, grad_pos_distr, grad_neg_distr)
+            self.grad_pos, self.grad_neg = calculateLossGradOverDataForBeta(self.d_pos, self.d_neg, self.grid, 
+									    self.grid_delta, grad_pos_distr, grad_neg_distr)
 	   
-
         grad = np.zeros((len(self.grad_pos) + len(self.grad_neg), 1, 1, 1))
         grad[self.pos_indecies] = self.grad_pos 
         grad[self.neg_indecies] = self.grad_neg
