@@ -1,4 +1,4 @@
-# HistogramLoss-NIPS2016
+# Histogram Loss
 This repository contains code for paper "Learning Deep Embeddings with Histogram Loss" (NIPS2016)
 
 ## Citing this work 
