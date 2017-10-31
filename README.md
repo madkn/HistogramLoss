@@ -9,3 +9,6 @@ This repository contains code for paper "Learning Deep Embeddings with Histogram
         Booktitle = {Neural Information Processing Systems},  
         Year = {2016}  
     }
+
+
+Pytorch implementation: https://github.com/valerystrizh/pytorch-histogram-loss
