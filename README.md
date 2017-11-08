@@ -11,5 +11,5 @@ This repository contains code for paper "Learning Deep Embeddings with Histogram
     }
 
 
-Pytorch implementation: https://github.com/valerystrizh/pytorch-histogram-loss
+Pytorch implementation: https://github.com/valerystrizh/pytorch-histogram-loss \
 Project page: http://sites.skoltech.ru/compvision/projects/learning-deep-embeddings-with-histogram-loss/
